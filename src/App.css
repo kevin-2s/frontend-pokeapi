@@ -1,0 +1,192 @@
+.pokedex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.pokemon-card {
+  position: relative;
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.pokemon-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 20px;
+  padding: 2px;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.pokemon-card.discovered {
+  box-shadow: 0 0 40px rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.pokemon-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.pokemon-card.discovered:hover {
+  box-shadow: 0 0 60px rgba(56, 189, 248, 0.4);
+}
+
+.pokemon-id {
+  position: absolute;
+  top: 1rem;
+  left: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.1);
+  z-index: 0;
+}
+
+.pokemon-card.discovered .pokemon-id {
+  color: rgba(56, 189, 248, 0.3);
+}
+
+.image-container {
+  width: 160px;
+  height: 160px;
+  margin: 1.5rem 0;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Base style for undiscovered */
+.pokemon-image-unknown {
+  filter: brightness(0) drop-shadow(0 0 5px rgba(0,0,0,0.5));
+  opacity: 0.5;
+  transition: all 0.5s ease;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pokemon-image-discovered {
+  filter: drop-shadow(0 20px 20px rgba(0,0,0,0.4));
+  transition: all 0.5s ease;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.pokemon-info {
+  text-align: center;
+  z-index: 1;
+  width: 100%;
+}
+
+.pokemon-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin: 0.5rem 0;
+  color: #fff;
+}
+
+.pokemon-card:not(.discovered) .pokemon-name {
+  color: #94a3b8;
+  letter-spacing: 0.2em;
+  font-family: monospace;
+}
+
+.discover-btn {
+  background: linear-gradient(135deg, #6366f1, #3b82f6);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  font-family: inherit;
+}
+
+.discover-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+}
+
+.discover-btn:active {
+  transform: translateY(0);
+}
+
+.discover-btn:disabled {
+  background: #334155;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.discovered-badge {
+  color: #38bdf8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(56, 189, 248, 0.1);
+  border-radius: 9999px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;  
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  border-top-color: #38bdf8;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 2rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
