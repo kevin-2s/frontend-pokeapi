@@ -14,11 +14,86 @@ interface DiscoveredPokemon {
   name: string;
 }
 
+const PokemonCard = ({ 
+  pokemon, 
+  isDiscovered, 
+  onDiscover,
+  isDiscovering
+}: { 
+  pokemon: Pokemon; 
+  isDiscovered: boolean; 
+  onDiscover: (p: Pokemon) => void;
+  isDiscovering: boolean;
+}) => {
+  const [description, setDescription] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isDiscovered && !description) {
+      // Obtenemos la descripción desde la API de especies (preferencia en español)
+      fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemon.id}`)
+        .then(res => res.json())
+        .then(data => {
+          const entry = data.flavor_text_entries.find((e: any) => e.language.name === 'es') || 
+                        data.flavor_text_entries.find((e: any) => e.language.name === 'en');
+          if (entry) {
+            setDescription(entry.flavor_text.replace(/[\n\f]/g, ' '));
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isDiscovered, pokemon.id, description]);
+
+  return (
+    <div className={`pokemon-card ${isDiscovered ? 'discovered' : ''}`}>
+      <div className="pokemon-id">#{String(pokemon.id).padStart(3, '0')}</div>
+      
+      <div className="image-container">
+        <img 
+          src={pokemon.image} 
+          alt={pokemon.name} 
+          className={isDiscovered ? 'pokemon-image-discovered' : 'pokemon-image-unknown'}
+        />
+      </div>
+
+      <div className="pokemon-info">
+        <div className="pokemon-name">
+          {isDiscovered ? pokemon.name : '???'}
+        </div>
+
+        {isDiscovered && description && (
+          <div className="pokemon-desc">
+            "{description}"
+          </div>
+        )}
+
+        {!isDiscovered ? (
+          <button 
+            className="discover-btn" 
+            onClick={() => onDiscover(pokemon)}
+            disabled={isDiscovering}
+          >
+            <Sparkles size={18} />
+            {isDiscovering ? 'Descubriendo...' : 'Descubrir'}
+          </button>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="discovered-badge">
+              <CheckCircle2 size={16} />
+              ¡Descubierto!
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   const [discoveredIds, setDiscoveredIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [discoveringId, setDiscoveringId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,7 +101,7 @@ function App() {
         // 1. Fetch from PokeAPI
         const pokeRes = await fetch('https://pokeapi.co/api/v2/pokemon?limit=150');
         const pokeData = await pokeRes.json();
-
+        
         const loadedPokemons = pokeData.results.map((p: any, index: number) => {
           const id = index + 1;
           return {
@@ -39,10 +114,10 @@ function App() {
         // 2. Fetch from Backend
         const backRes = await fetch('/api/pokemon');
         const backData: DiscoveredPokemon[] = await backRes.json();
-
+        
         const discSet = new Set<number>();
         if (Array.isArray(backData)) {
-          backData.forEach(p => discSet.add(p.no));
+            backData.forEach(p => discSet.add(p.no));
         }
 
         setPokemons(loadedPokemons);
@@ -67,7 +142,7 @@ function App() {
         },
         body: JSON.stringify({ no: pokemon.id, name: pokemon.name }),
       });
-
+      
       if (res.ok) {
         const newSet = new Set(discoveredIds);
         newSet.add(pokemon.id);
@@ -82,6 +157,11 @@ function App() {
     }
   };
 
+  const filteredPokemons = pokemons.filter(pokemon => {
+    const term = searchTerm.toLowerCase();
+    return pokemon.name.toLowerCase().includes(term) || String(pokemon.id).includes(term);
+  });
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -93,56 +173,44 @@ function App() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-        <Search size={40} color="#38bdf8" />
+      <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+        <img 
+          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" 
+          alt="Pokeball" 
+          style={{ width: '48px', opacity: 0.8 }} 
+        />
       </div>
-      <h1>Pokédex</h1>
-      <p className="subtitle">Descubre los 150 pokemons</p>
+      <h1>Pokédex Secreta</h1>
+      <p className="subtitle">Descubre los primeros 150 Pokémon y regístralos en tu backend</p>
+
+      <div className="search-container">
+        <Search className="search-icon" size={20} />
+        <input 
+          type="text" 
+          className="search-input"
+          placeholder="Busca por nombre o número (ej. Pikachu o 25)"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
       <div className="pokedex-grid">
-        {pokemons.map(pokemon => {
-          const isDiscovered = discoveredIds.has(pokemon.id);
-          const isDiscovering = discoveringId === pokemon.id;
-
-          return (
-            <div key={pokemon.id} className={`pokemon-card ${isDiscovered ? 'discovered' : ''}`}>
-              <div className="pokemon-id">#{String(pokemon.id).padStart(3, '0')}</div>
-
-              <div className="image-container">
-                <img
-                  src={pokemon.image}
-                  alt={pokemon.name}
-                  className={isDiscovered ? 'pokemon-image-discovered' : 'pokemon-image-unknown'}
-                />
-              </div>
-
-              <div className="pokemon-info">
-                <div className="pokemon-name">
-                  {isDiscovered ? pokemon.name : '???'}
-                </div>
-
-                {!isDiscovered ? (
-                  <button
-                    className="discover-btn"
-                    onClick={() => handleDiscover(pokemon)}
-                    disabled={isDiscovering}
-                  >
-                    <Sparkles size={18} />
-                    {isDiscovering ? 'Descubriendo...' : 'Descubrir'}
-                  </button>
-                ) : (
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <div className="discovered-badge">
-                      <CheckCircle2 size={16} />
-                      ¡Descubierto!
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {filteredPokemons.map(pokemon => (
+          <PokemonCard 
+            key={pokemon.id}
+            pokemon={pokemon}
+            isDiscovered={discoveredIds.has(pokemon.id)}
+            isDiscovering={discoveringId === pokemon.id}
+            onDiscover={handleDiscover}
+          />
+        ))}
       </div>
+      
+      {filteredPokemons.length === 0 && (
+        <div style={{ textAlign: 'center', marginTop: '3rem', color: '#94a3b8' }}>
+          <h3>No se encontró ningún Pokémon con "{searchTerm}"</h3>
+        </div>
+      )}
     </>
   );
 }
