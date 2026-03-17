@@ -14,14 +14,14 @@ interface DiscoveredPokemon {
   name: string;
 }
 
-const PokemonCard = ({ 
-  pokemon, 
-  isDiscovered, 
+const PokemonCard = ({
+  pokemon,
+  isDiscovered,
   onDiscover,
   isDiscovering
-}: { 
-  pokemon: Pokemon; 
-  isDiscovered: boolean; 
+}: {
+  pokemon: Pokemon;
+  isDiscovered: boolean;
   onDiscover: (p: Pokemon) => void;
   isDiscovering: boolean;
 }) => {
@@ -33,8 +33,8 @@ const PokemonCard = ({
       fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemon.id}`)
         .then(res => res.json())
         .then(data => {
-          const entry = data.flavor_text_entries.find((e: any) => e.language.name === 'es') || 
-                        data.flavor_text_entries.find((e: any) => e.language.name === 'en');
+          const entry = data.flavor_text_entries.find((e: any) => e.language.name === 'es') ||
+            data.flavor_text_entries.find((e: any) => e.language.name === 'en');
           if (entry) {
             setDescription(entry.flavor_text.replace(/[\n\f]/g, ' '));
           }
@@ -46,11 +46,11 @@ const PokemonCard = ({
   return (
     <div className={`pokemon-card ${isDiscovered ? 'discovered' : ''}`}>
       <div className="pokemon-id">#{String(pokemon.id).padStart(3, '0')}</div>
-      
+
       <div className="image-container">
-        <img 
-          src={pokemon.image} 
-          alt={pokemon.name} 
+        <img
+          src={pokemon.image}
+          alt={pokemon.name}
           className={isDiscovered ? 'pokemon-image-discovered' : 'pokemon-image-unknown'}
         />
       </div>
@@ -67,8 +67,8 @@ const PokemonCard = ({
         )}
 
         {!isDiscovered ? (
-          <button 
-            className="discover-btn" 
+          <button
+            className="discover-btn"
             onClick={() => onDiscover(pokemon)}
             disabled={isDiscovering}
           >
@@ -101,7 +101,7 @@ function App() {
         // 1. Fetch from PokeAPI
         const pokeRes = await fetch('https://pokeapi.co/api/v2/pokemon?limit=150');
         const pokeData = await pokeRes.json();
-        
+
         const loadedPokemons = pokeData.results.map((p: any, index: number) => {
           const id = index + 1;
           return {
@@ -114,10 +114,10 @@ function App() {
         // 2. Fetch from Backend
         const backRes = await fetch('/api/pokemon');
         const backData: DiscoveredPokemon[] = await backRes.json();
-        
+
         const discSet = new Set<number>();
         if (Array.isArray(backData)) {
-            backData.forEach(p => discSet.add(p.no));
+          backData.forEach(p => discSet.add(p.no));
         }
 
         setPokemons(loadedPokemons);
@@ -142,7 +142,7 @@ function App() {
         },
         body: JSON.stringify({ no: pokemon.id, name: pokemon.name }),
       });
-      
+
       if (res.ok) {
         const newSet = new Set(discoveredIds);
         newSet.add(pokemon.id);
@@ -174,19 +174,19 @@ function App() {
   return (
     <>
       <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-        <img 
-          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" 
-          alt="Pokeball" 
-          style={{ width: '48px', opacity: 0.8 }} 
+        <img
+          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"
+          alt="Pokeball"
+          style={{ width: '48px', opacity: 0.8 }}
         />
       </div>
-      <h1>Pokédex Secreta</h1>
-      <p className="subtitle">Descubre los primeros 150 Pokémon y regístralos en tu backend</p>
+      <h1>Pokédex</h1>
+      <p className="subtitle">Descubre los primeros 150 Pokémon</p>
 
       <div className="search-container">
         <Search className="search-icon" size={20} />
-        <input 
-          type="text" 
+        <input
+          type="text"
           className="search-input"
           placeholder="Busca por nombre o número (ej. Pikachu o 25)"
           value={searchTerm}
@@ -196,7 +196,7 @@ function App() {
 
       <div className="pokedex-grid">
         {filteredPokemons.map(pokemon => (
-          <PokemonCard 
+          <PokemonCard
             key={pokemon.id}
             pokemon={pokemon}
             isDiscovered={discoveredIds.has(pokemon.id)}
@@ -205,7 +205,7 @@ function App() {
           />
         ))}
       </div>
-      
+
       {filteredPokemons.length === 0 && (
         <div style={{ textAlign: 'center', marginTop: '3rem', color: '#94a3b8' }}>
           <h3>No se encontró ningún Pokémon con "{searchTerm}"</h3>
